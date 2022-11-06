@@ -1,0 +1,16 @@
+from numpy import ndarray
+
+def remove_dirt(
+    image: ndarray,
+    keep: bool = True,
+    max_distance: int = 20,
+    min_area: float = 0.05,
+) -> ndarray: ...
+def fill_holes(image: ndarray, hole_area: float = 0.001) -> ndarray: ...
+def refine_regions(image: ndarray) -> ndarray: ...
+def refine_legs(
+    image: ndarray, pair_labels: list[tuple[int, int]], body_labels: set[int]
+) -> ndarray: ...
+def leg_segments(
+    image: ndarray, labels: dict[int, list[int]], body_labels: set[int]
+) -> ndarray: ...
