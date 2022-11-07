@@ -1,6 +1,6 @@
-#include "leg_utils.hpp"
 #include "legs.hpp"
 #include "shortest_path.hpp"
+#include "utils.cpp"
 
 std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, const Component &component)
 {
@@ -10,11 +10,11 @@ std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_l
 
     size_t label = 1;
     Matrix<size_t> group_labels(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
-    Matrix<char> marker(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
+    Matrix<bool> marker(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
     std::vector<std::vector<Point>> groups;
 
     for (auto &point : sorted) {
-        marker.at(point) = 1;
+        marker.at(point) = true;
     }
 
     for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
@@ -28,7 +28,7 @@ std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_l
         for (size_t i = 0; i < 8; i++) {
             auto row = node.row + drow[i];
             auto col = node.col + dcol[i];
-            if (is_outside(image, row, col) || marker.at(row, col) == 0 || group_labels.at(row, col) == group_labels.at(node)) {
+            if (is_outside(image, row, col) || !marker.at(row, col) || group_labels.at(row, col) == group_labels.at(node)) {
                 continue;
             }
 

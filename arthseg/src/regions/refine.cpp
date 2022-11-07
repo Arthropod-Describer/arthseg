@@ -4,27 +4,30 @@
 #include "refine.hpp"
 #include "utils.hpp"
 
-#include <iostream>
-
 static void attach(PyArrayObject *image, const ComponentWithEdge &component);
 
 PyArrayObject *refine_regions(PyArrayObject *image)
 {
+    _import_array();
     auto components = connected_components_with_edge(image);
-    std::sort(components.begin(), components.end());
 
-    size_t label = 1;
+    std::map<size_t, const ComponentWithEdge *> max_components;
     size_t body_area = 0;
-    for (auto &component : components) {
-        std::cout << component.label << " " << component.size() << std::endl;
-        if (component.label == label || (component.label == 4 && component.size() > body_area / 40)) {
-            label++;
-            if (component.label < 4) {
-                body_area += component.size();
-            }
-        } else {
-            attach(image, component);
+    for (const auto &component : components) {
+        max_components.try_emplace(component.label, &component);
+        if (max_components[component.label]->size() < component.size()) {
+            max_components[component.label] = &component;
         }
+        if (component.label < 4) {
+            body_area += component.size();
+        }
+    }
+
+    for (const auto &component : components) {
+        if (&component == max_components[component.label] || (component.label == 4 && component.size() > body_area / 40)) {
+            continue;
+        }
+        attach(image, component);
     }
 
     return image;

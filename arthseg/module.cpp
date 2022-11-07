@@ -58,24 +58,21 @@ static PyObject *Py_RefineLegs(PyObject *, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    size_t label = 0;
     std::vector<std::vector<Point>> legs;
+    std::vector<Point> body;
     for (auto &component : connected_components(image)) {
         if (component.label == 4) {
             for (auto &leg : split_leg(image, body_labels, component)) {
                 if (!leg.empty()) {
-                    for (auto &point : leg) {
-                        auto *item = PyTuple_GetItem(PyList_GetItem(pair_labels, label), 0);
-                        PyArray_SETITEM(image, (char *) PyArray_GETPTR2(image, point.row, point.col), item);
-                    }
-                    label++;
-                    label %= 4;
+                    legs.push_back(std::move(leg));
                 }
             }
+        } else if (PySet_Contains(body_labels, PyLong_FromLong(component.label))) {
+            body.insert(body.end(), component.nodes.begin(), component.nodes.end());
         }
     }
 
-    // reorder_legs(image, legs);
+    reored_legs(image, body_labels, pair_labels, legs, body);
     return Py_BuildValue("O", image);
 }
 

@@ -23,5 +23,6 @@ setup(
     url='https://github.com/Arthropod-Describer/arthseg',
     install_requires=['numpy'],
     ext_modules=[module],
-    py_modules=['arthseg'],
+    package_data={'arthseg': ['__init__.pyi']},
+    packages=['arthseg'],
 )

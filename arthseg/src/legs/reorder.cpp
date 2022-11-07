@@ -1,65 +1,85 @@
-#include "leg_utils.hpp"
 #include "legs.hpp"
+#include "moments.hpp"
+#include "utils.cpp"
 
+using LegWithStart = std::vector<std::pair<std::vector<Point>, Point>>;
 using LegPair = std::pair<std::vector<Point>, std::vector<Point>>;
 
-static Point get_centroid(const std::vector<Point> &component)
-{
-    size_t row = 0, col = 0;
-    for (const auto &point : component) {
-        row += point.row;
-        col += point.col;
-    }
-    return { row /= component.size(), col /= component.size() };
-}
+static std::vector<LegPair> make_pairs(LegWithStart &left, LegWithStart &right, Py_ssize_t size);
+static bool is_closer(LegWithStart::iterator left, LegWithStart::iterator right);
 
-void reored_legs(PyArrayObject *image, PyObject *labels, PyObject *pair_labels, PyObject *body_labels, const std::vector<std::vector<Point>> &legs)
+void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_labels, const std::vector<std::vector<Point>> &legs, const std::vector<Point> &body)
 {
-    std::vector<std::pair<std::vector<Point>, Point>> left, right;
+    LegWithStart left, right;
 
+    auto body_moments = Moments(body);
     for (const auto &leg : legs) {
-        auto centroid = get_centroid(leg);
-        auto leg_start = get_centroid(find_leg_start(image, body_labels, leg));
+        auto centroid = Moments::get_centroid(leg);
+        auto leg_start = Moments::get_centroid(find_leg_start(image, body_labels, leg));
 
-        if (centroid.col < leg_start.col) {
-            left.push_back({ leg, centroid });
+        if (body_moments.half_axis(centroid) < 0) {
+            left.push_back({ std::move(leg), leg_start });
         } else {
-            right.push_back({ leg, centroid });
+            right.push_back({ std::move(leg), leg_start });
         }
     }
+
+    // size_t index = 0;
+    // for (const auto &[left, right] : make_pairs(left, right, PyList_Size(pair_labels))) {
+    //     auto left_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 0);
+    //     auto right_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 1);
+
+    //     for (const auto &point : left) {
+    //         PyArray_SETITEM(image, (char *) PyArray_GETPTR2(image, point.row, point.col), left_label);
+    //     }
+    //     for (const auto &point : right) {
+    //         PyArray_SETITEM(image, (char *) PyArray_GETPTR2(image, point.row, point.col), right_label);
+    //     }
+    //     index++;
+    // }
 }
 
-// static std::vector<LegPair> make_pairs(std::vector<std::pair<std::vector<Point>, Point>> &left, std::vector<std::pair<std::vector<Point>, Point>> &right)
+// static std::vector<LegPair> make_pairs(LegWithStart &left, LegWithStart &right, Py_ssize_t size)
 // {
 //     std::vector<LegPair> pairs;
 
-//     bool left_full = left.size() == 4;
-//     bool right_full = right.size() == 4;
+//     bool left_full = left.size() == size;
+//     bool right_full = right.size() == size;
 
 //     auto l = left.begin();
 //     auto r = right.begin();
 
-//     while ((!left.empty() || !right.empty()) && pairs.size() < 4) {
+//     while ((!left.empty() || !right.empty()) && pairs.size() < size) {
 //         if (left.empty()) {
-//             pairs.push_back({}, r->first);
+//             pairs.emplace_back(std::vector<Point>(), std::move(r->first));
 //             r++;
 //         } else if (right.empty()) {
-//             pairs.push_back(l->first, {});
+//             pairs.emplace_back(std::move(l->first), std::vector<Point>());
 //             l++;
 //         } else {
-//             if ((left_full && right_full) || ((r + 1 == right.end() || abs(l->second - r->second) < abs(l->second - (r + 1)->second)) && (l + 1 == left.end() || abs(l->second - r->second) < abs((l + 1)->second - r->second)))) {
-//                 pairs.emplace_back(*l, *r);
+//             if ((left_full && right_full) || ((r + 1 == right.end() || is_closer(l, r)) && (l + 1 != left.end() || is_closer(r, l)))) {
+//                 //  ((r + 1 == right.end() || abs(l->second - r->second) < abs(l->second - (r + 1)->second)) && (l + 1 == left.end() || abs(l->second - r->second) < abs((l + 1)->second - r->second)))) {
+//                 pairs.emplace_back(std::move(l->first), std::move(r->first));
 //                 l++;
-//                 r++;
-//             } else if (left_full || (l->second < r->second && !right_full)) {
-//                 pairs.emplace_back(*l, nullptr);
-//                 l++;
-//             } else {
-//                 pairs.emplace_back(nullptr, *r);
 //                 r++;
 //             }
+//         }
+//         else if (left_full || (l->second < r->second && !right_full))
+//         {
+//             pairs.emplace_back(std::move(l->first), std::vector<Point>());
+//             l++;
+//         }
+//         else
+//         {
+//             pairs.emplace_back(std::vector<Point>(), std::move(r->first));
+//             r++;
 //         }
 //     }
 
 //     return pairs;
 // }
+
+static bool is_closer(LegWithStart::iterator left, LegWithStart::iterator right)
+{
+    return Point::distance(left->second, right->second) < Point::distance(left->second, (right + 1)->second);
+}

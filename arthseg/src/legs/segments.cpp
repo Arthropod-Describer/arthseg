@@ -1,9 +1,9 @@
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #include <numpy/arrayobject.h>
 
-#include "leg_utils.hpp"
 #include "legs.hpp"
 #include "shortest_path.hpp"
+#include "utils.cpp"
 
 void leg_segments(PyArrayObject *image, PyObject *labels, PyObject *body_labels, const Component &component)
 {

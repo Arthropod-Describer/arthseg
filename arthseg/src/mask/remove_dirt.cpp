@@ -21,13 +21,16 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
         return image;
     }
 
-    std::sort(components.begin(), components.end(), [](auto &left, auto &right) {
-        return left.size() > right.size();
+    auto largest = std::max_element(components.begin(), components.end(), [](auto &left, auto &right) {
+        return left.size() < right.size();
     });
 
-    for (size_t i = 1; i < components.size(); i++) {
-        if (!keep || components[i].size() < min_area * components[0].size() || min_distance(components[0].nodes, components[i].nodes) > max_distance) {
-            for (auto &node : components[i].nodes) {
+    for (auto it = components.begin(); it != components.end(); it++) {
+        if (it == largest) {
+            continue;
+        }
+        if (!keep || it->size() < min_area * largest->size() || min_distance(largest->edge, it->edge) > max_distance) {
+            for (auto &node : it->nodes) {
                 PyArray_Set(image, node.row, node.col, 0);
             }
         }
@@ -42,10 +45,7 @@ static size_t min_distance(const std::vector<Point> &left, const std::vector<Poi
 
     for (auto &point1 : left) {
         for (auto &point2 : right) {
-            auto dist = Point::distance(point1, point2);
-            if (dist < distance) {
-                distance = dist;
-            }
+            distance = std::min(distance, (size_t) Point::distance(point1, point2));
         }
     }
     return distance;

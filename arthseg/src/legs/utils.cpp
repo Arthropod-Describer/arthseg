@@ -1,7 +1,5 @@
-#pragma once
-
-#include "connected_components.hpp"
 #include "utils.hpp"
+#include "connected_components.hpp"
 
 inline bool is_edge(PyArrayObject *image, PyObject *body_labels, const Point &point)
 {
@@ -17,6 +15,7 @@ inline bool is_edge(PyArrayObject *image, PyObject *body_labels, const Point &po
 
 inline std::vector<Point> find_leg_start(PyArrayObject *image, PyObject *body_labels, const std::vector<Point> &component)
 {
+    _import_array();
     std::vector<Point> starts;
     std::copy_if(component.begin(), component.end(), std::back_inserter(starts), [&](const Point &point) { return is_edge(image, body_labels, point); });
 
