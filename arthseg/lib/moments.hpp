@@ -5,7 +5,7 @@
 
 class Moments
 {
-  public:
+  private:
     double angle;
     double radius;
 

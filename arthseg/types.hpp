@@ -15,7 +15,7 @@ struct Point
     {
         float dx = abs((int) a.col - (int) b.col);
         float dy = abs((int) a.row - (int) b.row);
-        return dx > dy ? 0.41 * dy + 0.941246 * dx : 0.41 * dx + 0.941246 * dy;
+        return dx > dy ? (0.41 * dy + 0.941246 * dx) : (0.41 * dx + 0.941246 * dy);
     }
 };
 
@@ -33,5 +33,5 @@ class Matrix
     typename std::__1::vector<T>::reference at(const size_t row, const size_t col) { return data[row * cols + col]; }
     typename std::__1::vector<T>::reference at(const Point &point) { return data[point.row * cols + point.col]; }
     typename std::__1::vector<T>::const_reference at(const size_t row, const size_t col) const { return data[row * cols + col]; }
-    typename std::__1::vector<T>::const_reference &at(const Point &point) const { return data[point.row * cols + point.col]; }
+    typename std::__1::vector<T>::const_reference at(const Point &point) const { return data[point.row * cols + point.col]; }
 };

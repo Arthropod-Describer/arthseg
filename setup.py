@@ -1,7 +1,7 @@
 import numpy
 from glob import glob
-from setuptools import Extension, setup
 from pathlib import Path
+from setuptools import Extension, setup
 
 
 module = Extension(
