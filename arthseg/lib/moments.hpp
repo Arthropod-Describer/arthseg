@@ -1,36 +1,37 @@
+#include <iostream>
 #include <vector>
 
 #include "types.hpp"
 
 class Moments
 {
-  private:
-    double theta;
+  public:
+    double angle;
     double radius;
 
   public:
     Moments(const std::vector<Point> &points)
     {
         auto centroid = get_centroid(points);
-        int central_moment_11 = 0;
-        int central_moment_20 = 0;
-        int central_moment_02 = 0;
+        long int central_moment_11 = 0;
+        long int central_moment_20 = 0;
+        long int central_moment_02 = 0;
 
-        for (const auto &[row, col] : points) {
+        for (auto &[row, col] : points) {
             central_moment_11 += (row - centroid.row) * (col - centroid.col);
-            central_moment_20 += pow(row - centroid.row, 2);
-            central_moment_02 += pow(col - centroid.col, 2);
+            central_moment_20 += (row - centroid.row) * (row - centroid.row);
+            central_moment_02 += (col - centroid.col) * (col - centroid.col);
         }
 
-        theta = 0.5 * atan2(2 * central_moment_11, central_moment_20 - central_moment_02);
-        radius = centroid.row * sin(theta) + centroid.col * cos(theta);
+        angle = -0.5 * atan2(2 * central_moment_11, central_moment_20 - central_moment_02);
+        radius = centroid.row * sin(angle) + centroid.col * cos(angle);
     }
 
     Point project(const Point &point) const
     {
         return {
-            (size_t) (point.row * sin(theta) + point.col * cos(theta) - radius),
-            (size_t) (point.row * cos(theta) - point.col * sin(theta))
+            (size_t) (point.row * sin(angle) + point.col * cos(angle) - radius),
+            (size_t) (point.row * cos(angle) - point.col * sin(angle))
         };
     }
 
@@ -40,7 +41,7 @@ class Moments
      * @return negative half axis if point is on the left side of the centroid, positive half axis otherwise
      */
     {
-        return point.row * sin(theta) + point.col * cos(theta) - radius;
+        return point.row * sin(angle) + point.col * cos(angle) - radius;
     }
 
     static Point get_centroid(const std::vector<Point> &points)

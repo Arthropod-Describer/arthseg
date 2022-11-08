@@ -38,7 +38,7 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component)
     std::map<unsigned long, size_t> neighbours;
 
     for (auto &edge : component.edge) {
-        for (size_t i = 0; i < 4; i++) {
+        for (size_t i = 0; i < CONNECTIVITY_4; i++) {
             auto row = edge.row + drow[i];
             auto col = edge.col + dcol[i];
 
@@ -54,7 +54,7 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component)
         return;
     }
 
-    auto [label, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](const auto &l, const auto &r) { return l.second < r.second; });
+    auto [label, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](auto &l, auto &r) { return l.second < r.second; });
     for (auto &node : component.nodes) {
         PyArray_Set(image, node.row, node.col, label);
     }

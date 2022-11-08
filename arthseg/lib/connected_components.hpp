@@ -6,11 +6,6 @@
 
 #include "types.hpp"
 
-using Connectivity = enum Connectivity {
-    CONNECTIVITY_4 = 4,
-    CONNECTIVITY_8 = 8
-};
-
 struct Component
 {
     size_t label;

@@ -2,6 +2,11 @@
 
 #include <tuple>
 
+using Connectivity = enum Connectivity {
+    CONNECTIVITY_4 = 4,
+    CONNECTIVITY_8 = 8
+};
+
 struct Point
 {
     size_t row, col;
@@ -24,8 +29,9 @@ class Matrix
     size_t rows, cols;
 
     Matrix(const size_t rows, const size_t cols) : data(rows * cols), rows(rows), cols(cols) {}
+    Matrix(const size_t rows, const size_t cols, T initial_value) : data(rows * cols, initial_value), rows(rows), cols(cols) {}
     typename std::__1::vector<T>::reference at(const size_t row, const size_t col) { return data[row * cols + col]; }
     typename std::__1::vector<T>::reference at(const Point &point) { return data[point.row * cols + point.col]; }
-    const auto &at(const size_t row, const size_t col) const { return data[row * cols + col]; }
-    const auto &at(const Point &point) const { return data[point.row * cols + point.col]; }
+    typename std::__1::vector<T>::const_reference at(const size_t row, const size_t col) const { return data[row * cols + col]; }
+    typename std::__1::vector<T>::const_reference &at(const Point &point) const { return data[point.row * cols + point.col]; }
 };

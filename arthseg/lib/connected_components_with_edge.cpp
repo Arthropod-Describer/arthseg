@@ -34,7 +34,7 @@ static void dfs(PyArrayObject *image, Matrix<bool> &marker, ComponentWithEdge &c
         for (size_t j = 0; j < connectivity; j++) {
             auto row = point.row + drow[j];
             auto col = point.col + dcol[j];
-            if (!is_outside(image, row, col) && marker.at(row, col) == 0 && PyArray_At(image, row, col) == component.label) {
+            if (!is_outside(image, row, col) && !marker.at(row, col) && PyArray_At(image, row, col) == component.label) {
                 marker.at(row, col) = true;
                 component.nodes.emplace_back(row, col);
 
