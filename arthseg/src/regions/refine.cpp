@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 
 #include "connected_components.hpp"
