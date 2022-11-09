@@ -18,8 +18,6 @@ PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
         return NULL;
     }
 
-    std::cout << "created" << std::endl;
-
     for (npy_intp row = 0; row < PyArray_DIM(image, 0); row++) {
         for (npy_intp col = 0; col < PyArray_DIM(image, 1); col++) {
             auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));

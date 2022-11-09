@@ -16,6 +16,15 @@ std::vector<Component> connected_components(PyArrayObject *image, Connectivity c
     std::vector<Component> components;
 
     std::cout << "initialized" << std::endl;
+    auto *po = PyArray_GETPTR2(image, 0, 0);
+    std::cout << "got pointer" << std::endl;
+    auto *item = PyArray_GETITEM(image, (char *) po);
+    std::cout << "got item" << std::endl;
+    std::cout << PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, 0, 0))) << std::endl;
+    std::cout << "showed" << std::endl;
+    std::cout << PyArray_At(image, 0, 0) << std::endl;
+
+    std::cout << "Loops " << std::endl;
 
     for (npy_intp row = 0; row < rows; row++) {
         for (npy_intp col = 0; col < cols; col++) {
