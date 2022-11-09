@@ -8,7 +8,7 @@ module = Extension(
     'arthseg',
     sources=glob('arthseg/**/*.cpp', recursive=True),
     include_dirs=[numpy.get_include(), 'arthseg', 'arthseg/lib'],
-    extra_compile_args=['-std=c++20'],
+    extra_compile_args=['-std=c++17'],
 )
 
 setup(
