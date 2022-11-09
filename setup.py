@@ -1,14 +1,20 @@
 import numpy
+import os
 from glob import glob
 from pathlib import Path
 from setuptools import Extension, setup
 
+# platform specific settings
+if os.name == 'nt':
+    flags = ['/std:c++17']
+else:
+    flags = ['-std=c++17']
 
 module = Extension(
     'arthseg',
     sources=glob('arthseg/**/*.cpp', recursive=True),
     include_dirs=[numpy.get_include(), 'arthseg', 'arthseg/lib'],
-    extra_compile_args=['-std=c++17'],
+    extra_compile_args=flags,
 )
 
 setup(
