@@ -8,8 +8,6 @@
 #include "src/mask/remove_dirt.hpp"
 #include "src/regions/refine.hpp"
 
-#include "skeletonization.hpp"
-
 static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 {
     PyArrayObject *image;
@@ -60,11 +58,21 @@ static PyObject *Py_RefineLegs(PyObject *, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
+    if (output == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+        return NULL;
+    }
+    if (PyArray_CopyInto(output, image)) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to copy image");
+        return NULL;
+    }
+
     std::vector<std::vector<Point>> legs;
     std::vector<Point> body;
-    for (auto &component : connected_components(image)) {
+    for (auto &component : connected_components(output)) {
         if (component.label == 4) {
-            for (auto &leg : split_leg(image, body_labels, component)) {
+            for (auto &leg : split_leg(output, body_labels, component)) {
                 if (!leg.empty()) {
                     legs.push_back(std::move(leg));
                 }
@@ -74,19 +82,9 @@ static PyObject *Py_RefineLegs(PyObject *, PyObject *args, PyObject *kwargs)
         }
     }
 
-    reored_legs(image, body_labels, pair_labels, legs, body);
+    reored_legs(output, body_labels, pair_labels, legs, body);
 
-    // PyArrayObject *mask = (PyArrayObject *) PyArray_ZEROS(PyArray_NDIM(image), PyArray_DIMS(image), NPY_UINT8, 0);
-    // std::vector<std::vector<Point>> legs;
-    // for (auto &component : connected_components(image)) {
-    //     if (component.label == 4) {
-    //         for (auto &point : skeletonization(image, component.nodes)) {
-    //             PyArray_SETITEM(mask, (char *) PyArray_GETPTR2(mask, point.row, point.col), PyLong_FromLong(1));
-    //         }
-    //     }
-    // }
-
-    return Py_BuildValue("O", image);
+    return Py_BuildValue("O", output);
 }
 
 static PyObject *Py_LegSegments(PyObject *, PyObject *args, PyObject *kwargs)

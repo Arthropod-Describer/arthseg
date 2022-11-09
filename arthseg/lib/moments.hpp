@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 
 #include "types.hpp"
@@ -25,9 +24,20 @@ class Moments
         radius = centroid.row * sin(angle) + centroid.col * cos(angle);
     }
 
-    Point project(const Point &point) const
+    Point orthogonal_projection(const Point &point) const
     {
-        return Point(point.row * cos(angle) + point.col * sin(angle), -point.row * sin(angle) + point.col * cos(angle));
+        double a1 = radius * cos(angle);
+        double b1 = radius * sin(angle);
+        double c1 = -a1 * a1 - b1 * b1;
+
+        double a2 = b1;
+        double b2 = -a1;
+        double c2 = -a2 * point.col - b2 * point.row;
+
+        size_t x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
+        size_t y = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1);
+
+        return { y, x };
     }
 
     int half_axis(const Point &point) const

@@ -5,8 +5,6 @@
 #include "legs.hpp"
 #include "moments.hpp"
 
-#include <iostream>
-
 using LegWithHeight = std::vector<std::pair<std::vector<Point>, size_t>>;
 using LegPair = std::pair<std::vector<Point>, std::vector<Point>>;
 
@@ -15,19 +13,10 @@ static bool is_closer(LegWithHeight::iterator left, LegWithHeight::iterator righ
 
 void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_labels, const std::vector<std::vector<Point>> &legs, const std::vector<Point> &body)
 {
+    _import_array();
     LegWithHeight left, right;
 
     auto body_moments = Moments(body);
-    // for (npy_intp row = 0; row < PyArray_DIM(image, 0); row++) {
-    //     // for (npy_intp col = 0; col < PyArray_DIM(image, 1); col++) {
-    //     auto col = (body_moments.radius - row * sin(body_moments.angle)) / cos(body_moments.angle);
-
-    //     if (col < 0 || col >= PyArray_DIM(image, 1)) {
-    //         continue;
-    //     }
-    //     PyArray_Set(image, row, col, 10);
-    //     // }
-    // }
     Point x_axis_intersection(0, body_moments.radius / cos(body_moments.angle));
 
     for (const auto &leg : legs) {
@@ -35,9 +24,9 @@ void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_lab
         auto leg_start = Moments::get_centroid(find_leg_start(image, body_labels, leg));
 
         if (body_moments.half_axis(centroid) < 0) {
-            left.push_back({ std::move(leg), Point::distance(x_axis_intersection, body_moments.project(leg_start)) });
+            left.push_back({ std::move(leg), Point::distance(x_axis_intersection, body_moments.orthogonal_projection(leg_start)) });
         } else {
-            right.push_back({ std::move(leg), Point::distance(x_axis_intersection, body_moments.project(leg_start)) });
+            right.push_back({ std::move(leg), Point::distance(x_axis_intersection, body_moments.orthogonal_projection(leg_start)) });
         }
     }
 
@@ -78,7 +67,6 @@ static std::vector<LegPair> make_pairs(LegWithHeight &left, LegWithHeight &right
             l++;
         } else {
             if ((left_full && right_full) || ((r + 1 == right.end() || is_closer(l, r)) && (l + 1 != left.end() || is_closer(r, l)))) {
-                //  ((r + 1 == right.end() || abs(l->second - r->second) < abs(l->second - (r + 1)->second)) && (l + 1 == left.end() || abs(l->second - r->second) < abs((l + 1)->second - r->second)))) {
                 pairs.emplace_back(std::move(l->first), std::move(r->first));
                 l++;
                 r++;
