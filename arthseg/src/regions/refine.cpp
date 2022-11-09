@@ -9,7 +9,7 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component);
 
 PyArrayObject *refine_regions(PyArrayObject *image)
 {
-    _import_array();
+    import_array();
     PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
     if (output == NULL) {
         PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");

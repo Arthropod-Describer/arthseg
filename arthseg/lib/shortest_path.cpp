@@ -8,7 +8,6 @@ static constexpr size_t line = 10, diagonal = 14;
 
 std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &points, const std::vector<Point> &start)
 {
-    _import_array();
     const size_t rows = PyArray_DIM(image, 0);
     const size_t cols = PyArray_DIM(image, 1);
     Matrix<bool> marker(rows, cols);

@@ -18,7 +18,6 @@ bool is_edge(PyArrayObject *image, PyObject *body_labels, const Point &point)
 
 std::vector<Point> find_leg_start(PyArrayObject *image, PyObject *body_labels, const std::vector<Point> &component)
 {
-    _import_array();
     std::vector<Point> start;
     std::copy_if(component.begin(), component.end(), std::back_inserter(start), [&](const Point &point) { return is_edge(image, body_labels, point); });
     return start;

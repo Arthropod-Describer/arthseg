@@ -13,7 +13,6 @@ static bool is_closer(LegWithHeight::iterator left, LegWithHeight::iterator righ
 
 void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_labels, const std::vector<std::vector<Point>> &legs, const std::vector<Point> &body)
 {
-    _import_array();
     LegWithHeight left, right;
 
     auto body_moments = Moments(body);

@@ -1,23 +1,14 @@
 #include "connected_components.hpp"
 #include "utils.hpp"
 
-#include <iostream>
-
 static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component, Connectivity connectivity);
 
 std::vector<Component> connected_components(PyArrayObject *image, Connectivity connectivity)
 {
-    std::cout << "connected_components" << std::endl;
-    _import_array();
-    std::cout << "imported array" << std::endl;
     const auto rows = PyArray_DIM(image, 0);
-    std::cout << "got rows" << std::endl;
     const auto cols = PyArray_DIM(image, 1);
-    std::cout << "got cols" << std::endl;
     Matrix<bool> marker(rows, cols);
-    std::cout << "created marker" << std::endl;
     std::vector<Component> components;
-    std::cout << "components" << std::endl;
 
     for (npy_intp row = 0; row < rows; row++) {
         for (npy_intp col = 0; col < cols; col++) {
@@ -29,7 +20,6 @@ std::vector<Component> connected_components(PyArrayObject *image, Connectivity c
             }
         }
     }
-    std::cout << "finished" << std::endl;
 
     return components;
 }

@@ -6,7 +6,6 @@ static bool is_edge(PyArrayObject *image, const Point &point, Connectivity edge_
 
 std::vector<ComponentWithEdge> connected_components_with_edge(PyArrayObject *image, Connectivity connectivity, Connectivity edge_connectivity)
 {
-    _import_array();
     const auto rows = PyArray_DIM(image, 0);
     const auto cols = PyArray_DIM(image, 1);
     Matrix<bool> marker(rows, cols);

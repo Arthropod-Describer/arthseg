@@ -8,8 +8,6 @@
 #include "src/mask/remove_dirt.hpp"
 #include "src/regions/refine.hpp"
 
-#include <iostream>
-
 static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 {
     PyArrayObject *image;
@@ -27,7 +25,6 @@ static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 
 static PyObject *Py_FillHoles(PyObject *, PyObject *args, PyObject *kwargs)
 {
-    std::cout << "called fill holes" << std::endl;
     PyArrayObject *image;
     float hole_area = 0.001;
     const char *kwlist[] = { "", "hole_area", NULL };
@@ -35,8 +32,6 @@ static PyObject *Py_FillHoles(PyObject *, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_TypeError, "Invalid argumnets");
         return NULL;
     }
-
-    std::cout << "loaded args" << std::endl;
 
     return Py_BuildValue("O", fill_holes(image, hole_area));
 }

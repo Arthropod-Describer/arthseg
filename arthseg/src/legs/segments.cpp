@@ -6,7 +6,6 @@
 
 void leg_segments(PyArrayObject *image, PyObject *labels, PyObject *body_labels, const Component &component)
 {
-    _import_array();
     size_t size = PyList_Size(labels);
     if (size == 0) {
         return;

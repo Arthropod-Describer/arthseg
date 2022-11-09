@@ -5,7 +5,6 @@
 
 std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, const Component &component)
 {
-    _import_array();
     std::vector<Point> start = find_leg_start(image, body_labels, component.nodes);
 
     auto sorted = shortest_path(image, component.nodes, start);
