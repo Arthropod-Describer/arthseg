@@ -1,5 +1,7 @@
-#include "utils.hpp"
+#include <algorithm>
+
 #include "legs.hpp"
+#include "utils.hpp"
 
 bool is_edge(PyArrayObject *image, PyObject *body_labels, const Point &point)
 {
