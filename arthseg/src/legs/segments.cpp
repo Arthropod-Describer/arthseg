@@ -3,7 +3,6 @@
 
 #include "legs.hpp"
 #include "shortest_path.hpp"
-#include "utils.cpp"
 
 void leg_segments(PyArrayObject *image, PyObject *labels, PyObject *body_labels, const Component &component)
 {

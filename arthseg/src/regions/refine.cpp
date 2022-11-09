@@ -9,6 +9,16 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component);
 PyArrayObject *refine_regions(PyArrayObject *image)
 {
     _import_array();
+    PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
+    if (output == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+        return NULL;
+    }
+    if (PyArray_CopyInto(output, image)) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to copy image");
+        return NULL;
+    }
+
     auto components = connected_components_with_edge(image);
 
     std::map<size_t, const ComponentWithEdge *> max_components;
@@ -27,10 +37,10 @@ PyArrayObject *refine_regions(PyArrayObject *image)
         if (&component == max_components[component.label] || (component.label == 4 && component.size() > body_area / 40)) {
             continue;
         }
-        attach(image, component);
+        attach(output, component);
     }
 
-    return image;
+    return output;
 }
 
 static void attach(PyArrayObject *image, const ComponentWithEdge &component)

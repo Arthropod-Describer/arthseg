@@ -5,11 +5,9 @@
 
 class Moments
 {
-  private:
+  public:
     double angle;
     double radius;
-
-  public:
     Moments(const std::vector<Point> &points)
     {
         auto centroid = get_centroid(points);
@@ -29,10 +27,7 @@ class Moments
 
     Point project(const Point &point) const
     {
-        return {
-            (size_t) (point.row * sin(angle) + point.col * cos(angle) - radius),
-            (size_t) (point.row * cos(angle) - point.col * sin(angle))
-        };
+        return Point(point.row * cos(angle) + point.col * sin(angle), -point.row * sin(angle) + point.col * cos(angle));
     }
 
     int half_axis(const Point &point) const

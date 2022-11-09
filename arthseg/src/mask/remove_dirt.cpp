@@ -10,15 +10,27 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
 {
     import_array();
     PyArrayObject *mask = (PyArrayObject *) PyArray_EMPTY(PyArray_NDIM(image), PyArray_DIMS(image), NPY_UINT8, 0);
+    PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
+    if (mask == NULL || output == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+        return NULL;
+    }
+
     for (npy_intp row = 0; row < PyArray_DIM(image, 0); row++) {
         for (npy_intp col = 0; col < PyArray_DIM(image, 1); col++) {
-            PyArray_SETITEM(mask, (char *) PyArray_GETPTR2(mask, row, col), Py_BuildValue("B", PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col))) != 0));
+            auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));
+            PyArray_SETITEM(mask, (char *) PyArray_GETPTR2(mask, row, col), Py_BuildValue("B", value != 0));
         }
+    }
+
+    if (PyArray_CopyInto(output, image)) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to copy image");
+        return NULL;
     }
 
     auto components = connected_components_with_edge(mask);
     if (components.size() < 2) {
-        return image;
+        return output;
     }
 
     auto largest = std::max_element(components.begin(), components.end(), [](auto &left, auto &right) {
@@ -31,12 +43,12 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
         }
         if (!keep || it->size() < min_area * largest->size() || min_distance(largest->edge, it->edge) > max_distance) {
             for (auto &node : it->nodes) {
-                PyArray_Set(image, node.row, node.col, 0);
+                PyArray_Set(output, node.row, node.col, 0);
             }
         }
     }
 
-    return image;
+    return output;
 }
 
 static size_t min_distance(const std::vector<Point> &left, const std::vector<Point> &right)
