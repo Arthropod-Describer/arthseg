@@ -130,7 +130,7 @@ static PyMethodDef methods[] = {
 static struct PyModuleDef module = {
     PyModuleDef_HEAD_INIT,
     "arthseg",
-    "Python C++ extensions for native proccesing.",
+    "Python C++ extensions for arthropod segmentation.",
     -1,
     methods,
 };

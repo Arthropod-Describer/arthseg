@@ -16,14 +16,14 @@ PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
 
     for (npy_intp row = 0; row < PyArray_DIM(image, 0); row++) {
         for (npy_intp col = 0; col < PyArray_DIM(image, 1); col++) {
-            auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));
+            const auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));
             PyArray_SETITEM(mask, (char *) PyArray_GETPTR2(mask, row, col), Py_BuildValue("B", value == 0));
         }
     }
 
-    auto components = connected_components(mask, CONNECTIVITY_4);
+    const auto components = connected_components(mask, CONNECTIVITY_4);
 
-    auto area = std::accumulate(components.begin(), components.end(), 0, [](auto acc, auto &component) {
+    const auto area = std::accumulate(components.begin(), components.end(), 0, [](auto acc, auto &component) {
         return acc + component.size();
     });
 
@@ -32,11 +32,11 @@ PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
         return NULL;
     }
 
-    size_t max_area = hole_area * (PyArray_DIM(image, 0) * PyArray_DIM(image, 1) - area);
+    const size_t max_area = hole_area * (PyArray_DIM(image, 0) * PyArray_DIM(image, 1) - area);
 
-    for (auto &component : components) {
+    for (const auto &component : components) {
         if (component.size() < max_area) {
-            for (auto &node : component.nodes) {
+            for (const auto &node : component.nodes) {
                 PyArray_Set(output, node.row, node.col, 1);
             }
         }

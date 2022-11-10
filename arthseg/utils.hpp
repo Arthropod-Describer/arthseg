@@ -3,11 +3,14 @@
 
 #include <numpy/arrayobject.h>
 
+#include <iostream>
+
 inline constexpr int drow[] = { 1, 0, -1, 0, 1, 1, -1, -1 };
 inline constexpr int dcol[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
 
 inline bool is_outside(PyArrayObject *image, size_t row, size_t col)
 {
+    std::cout << row << " " << col << std::endl;
     return (npy_intp) row >= PyArray_DIM(image, 0) || (npy_intp) col >= PyArray_DIM(image, 1);
 }
 

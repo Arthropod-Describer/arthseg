@@ -20,7 +20,7 @@ PyArrayObject *refine_regions(PyArrayObject *image)
         return NULL;
     }
 
-    auto components = connected_components_with_edge(image);
+    const auto components = connected_components_with_edge(image);
 
     std::map<size_t, const ComponentWithEdge *> max_components;
     size_t body_area = 0;
@@ -48,10 +48,10 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component)
 {
     std::map<unsigned long, size_t> neighbours;
 
-    for (auto &edge : component.edge) {
+    for (const auto &edge : component.edge) {
         for (size_t i = 0; i < CONNECTIVITY_4; i++) {
-            auto row = edge.row + drow[i];
-            auto col = edge.col + dcol[i];
+            const auto row = edge.row + drow[i];
+            const auto col = edge.col + dcol[i];
 
             if (!is_outside(image, row, col) && PyArray_At(image, row, col) != 0 && PyArray_At(image, row, col) != component.label) {
                 auto label = PyArray_At(image, row, col);
@@ -65,8 +65,8 @@ static void attach(PyArrayObject *image, const ComponentWithEdge &component)
         return;
     }
 
-    auto [label, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](auto &l, auto &r) { return l.second < r.second; });
-    for (auto &node : component.nodes) {
+    const auto [label, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](auto &l, auto &r) { return l.second < r.second; });
+    for (const auto &node : component.nodes) {
         PyArray_Set(image, node.row, node.col, label);
     }
 }

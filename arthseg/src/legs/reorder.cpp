@@ -15,12 +15,12 @@ void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_lab
 {
     LegWithHeight left, right;
 
-    auto body_moments = Moments(body);
-    Point x_axis_intersection(0, body_moments.radius / cos(body_moments.angle));
+    const auto body_moments = Moments(body);
+    const Point x_axis_intersection(0, body_moments.radius / cos(body_moments.angle));
 
     for (const auto &leg : legs) {
-        auto centroid = Moments::get_centroid(leg);
-        auto leg_start = Moments::get_centroid(find_leg_start(image, body_labels, leg));
+        const auto centroid = Moments::get_centroid(leg);
+        const auto leg_start = Moments::get_centroid(find_leg_start(image, body_labels, leg));
 
         if (body_moments.half_axis(centroid) < 0) {
             left.push_back({ std::move(leg), Point::distance(x_axis_intersection, body_moments.orthogonal_projection(leg_start)) });
@@ -29,13 +29,13 @@ void reored_legs(PyArrayObject *image, PyObject *body_labels, PyObject *pair_lab
         }
     }
 
-    std::sort(left.begin(), left.end(), [](auto &a, auto &b) { return a.second < b.second; });
-    std::sort(right.begin(), right.end(), [](auto &a, auto &b) { return a.second < b.second; });
+    std::sort(left.begin(), left.end(), [](const auto &a, const auto &b) { return a.second < b.second; });
+    std::sort(right.begin(), right.end(), [](const auto &a, const auto &b) { return a.second < b.second; });
 
     size_t index = 0;
     for (const auto &[left, right] : make_pairs(left, right, PyList_Size(pair_labels))) {
-        auto left_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 0);
-        auto right_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 1);
+        const auto left_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 0);
+        const auto right_label = PyTuple_GetItem(PyList_GetItem(pair_labels, index), 1);
 
         for (const auto &point : left) {
             PyArray_SETITEM(image, (char *) PyArray_GETPTR2(image, point.row, point.col), left_label);
@@ -51,8 +51,8 @@ static std::vector<LegPair> make_pairs(LegWithHeight &left, LegWithHeight &right
 {
     std::vector<LegPair> pairs;
 
-    bool left_full = left.size() == size;
-    bool right_full = right.size() == size;
+    const bool left_full = left.size() == size;
+    const bool right_full = right.size() == size;
 
     auto l = left.begin();
     auto r = right.begin();

@@ -14,8 +14,8 @@ struct Point
     Point(size_t row, size_t col) : row(row), col(col) {}
     static float distance(const Point &a, const Point &b)
     {
-        float dx = abs((int) a.col - (int) b.col);
-        float dy = abs((int) a.row - (int) b.row);
+        const float dx = abs((int) a.col - (int) b.col);
+        const float dy = abs((int) a.row - (int) b.row);
         return dx > dy ? (0.41 * dy + 0.941246 * dx) : (0.41 * dx + 0.941246 * dy);
     }
 };
@@ -27,7 +27,7 @@ class Matrix
     std::vector<T> data;
 
   public:
-    size_t rows, cols;
+    const size_t rows, cols;
 
     Matrix(const size_t rows, const size_t cols) : data(rows * cols), rows(rows), cols(cols) {}
     Matrix(const size_t rows, const size_t cols, T initial_value) : data(rows * cols, initial_value), rows(rows), cols(cols) {}
