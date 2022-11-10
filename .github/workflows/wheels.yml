@@ -1,6 +1,9 @@
 name: Build
 
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - develop
 
 jobs:
   build_wheels:
@@ -8,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-2019]
+        os: [macOS-11]
         # [ubuntu-20.04, windows-2019, macOS-11]
 
     steps:
@@ -24,9 +27,29 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp38-*"
-          CIBW_ARCHS_MACOS: arm64 x86_64
+          CIBW_ARCHS_MACOS: arm64  # x86_64
           CIBW_BEFORE_BUILD: pip install -r requirements.txt
 
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
+
+  publish:
+      name: Publish distribution 📦 to Test PyPI
+      needs: build_wheels
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+        packages_dir: ./wheelhouse
+      # steps:
+      #   - uses: actions/download-artifact@v2
+      #     with:
+      #       path: artifacts
+
+      #   - shell: bash
+      #     working-directory: artifacts
+      #     run: |
+      #       for i in $( ls ); do
+      #         cat $i/$ARTIFACT
+      #       done
