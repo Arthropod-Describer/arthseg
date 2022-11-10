@@ -19,7 +19,6 @@ std::vector<Component> connected_components(PyArrayObject *image, Connectivity c
                 components.emplace_back(PyArray_At(image, row, col), std::vector<Point>({ point }));
                 marker.at(point) = true;
                 dfs(image, marker, components.back(), connectivity);
-                std::cout << "returned from dfs" << std::endl;
             }
         }
     }
@@ -30,15 +29,14 @@ std::vector<Component> connected_components(PyArrayObject *image, Connectivity c
 static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component, Connectivity connectivity)
 {
     for (size_t i = 0; i < component.size(); i++) {
-        std::cout << "started loop" << std::endl;
         const auto &point = component.nodes[i];
         for (size_t j = 0; j < connectivity; j++) {
             const auto row = point.row + drow[j];
             const auto col = point.col + dcol[j];
+            std::cout << j << " " << row << " " << col << " " << component.size() << std::endl;
             if (!is_outside(image, row, col) && !marker.at(row, col) && PyArray_At(image, row, col) == component.label) {
                 marker.at(row, col) = true;
                 component.nodes.emplace_back(row, col);
-                std::cout << "pushed" << std::endl;
             }
         }
     }
