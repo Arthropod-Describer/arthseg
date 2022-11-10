@@ -44,25 +44,7 @@ jobs:
           with:
             name: wheels
             path: dist
-
-        - shell: bash
-          working-directory: dist
-          run: |
-            for i in $( ls ); do
-              cat $i/$ARTIFACT
-            done
         - uses: pypa/gh-action-pypi-publish@release/v1
           with:
             password: ${{ secrets.TEST_PYPI_API_TOKEN }}
             repository_url: https://test.pypi.org/legacy/
-      # steps:
-      #   - uses: actions/download-artifact@v2
-      #     with:
-      #       path: artifacts
-
-      #   - shell: bash
-      #     working-directory: artifacts
-      #     run: |
-      #       for i in $( ls ); do
-      #         cat $i/$ARTIFACT
-      #       done
