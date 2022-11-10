@@ -50,8 +50,11 @@ static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component
             const auto row = point.row + drow[j];
             const auto col = point.col + dcol[j];
             if (!is_outside(image, row, col) && !marker.at(row, col) && PyArray_At(image, row, col) == component.label) {
+                std::cout << "inside loop" << std::endl;
                 marker.at(row, col) = true;
+                std::cout << "creating point" << std::endl;
                 component.nodes.emplace_back(row, col);
+                std::cout << "pushed" << std::endl;
             }
         }
     }
