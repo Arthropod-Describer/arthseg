@@ -3,15 +3,12 @@
 
 #include <numpy/arrayobject.h>
 
-#include <iostream>
-
 inline constexpr int drow[] = { 1, 0, -1, 0, 1, 1, -1, -1 };
 inline constexpr int dcol[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
 
-inline bool is_outside(PyArrayObject *image, size_t row, size_t col)
+inline bool is_outside(PyArrayObject *image, npy_intp row, npy_intp col)
 {
-    std::cout << row << " " << col << std::endl;
-    return (npy_intp) row >= PyArray_DIM(image, 0) || (npy_intp) col >= PyArray_DIM(image, 1);
+    return row < 0 || row >= PyArray_DIM(image, 0) || col < 0 || col >= PyArray_DIM(image, 1);
 }
 
 inline unsigned long PyArray_At(PyArrayObject *image, size_t row, size_t col)
