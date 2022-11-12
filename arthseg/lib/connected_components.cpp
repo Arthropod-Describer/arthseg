@@ -1,8 +1,6 @@
 #include "connected_components.hpp"
 #include "utils.hpp"
 
-#include <iostream>
-
 static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component, Connectivity connectivity);
 
 std::vector<Component> connected_components(PyArrayObject *image, Connectivity connectivity)
@@ -33,12 +31,7 @@ static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component
         for (size_t j = 0; j < connectivity; j++) {
             const auto row = point.row + drow[j];
             const auto col = point.col + dcol[j];
-            bool debug = component.size() == 92170;
-            if (debug)
-                std::cout << j << " " << row << " " << col << " " << component.size() << std::endl;
-            if (!is_outside(image, row, col, debug) && !marker.at(row, col) && PyArray_At(image, row, col, debug) == component.label) {
-                if (debug)
-                    std::cout << "adding point" << std::endl;
+            if (!is_outside(image, row, col) && !marker.at(row, col) && PyArray_At(image, row, col) == component.label) {
                 marker.at(row, col) = true;
                 component.nodes.emplace_back(row, col);
             }

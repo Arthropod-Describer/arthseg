@@ -29,12 +29,12 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
         return NULL;
     }
 
-    const auto components = connected_components_with_edge(mask);
+    const auto components = connected_components_with_edge(mask, CONNECTIVITY_4);
     if (components.size() < 2) {
         return output;
     }
 
-    const auto largest = std::max_element(components.begin(), components.end(), [](auto &left, auto &right) {
+    const auto largest = std::max_element(components.begin(), components.end(), [](const auto &left, const auto &right) {
         return left.size() < right.size();
     });
 

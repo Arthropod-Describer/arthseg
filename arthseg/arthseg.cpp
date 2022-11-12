@@ -10,7 +10,7 @@
 
 static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 {
-    PyArrayObject *image;
+    PyArrayObject *image = nullptr;
     int keep = true;
     size_t max_distance = 20;
     float min_area = 0.05;
@@ -25,7 +25,7 @@ static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 
 static PyObject *Py_FillHoles(PyObject *, PyObject *args, PyObject *kwargs)
 {
-    PyArrayObject *image;
+    PyArrayObject *image = nullptr;
     float hole_area = 0.001;
     const char *kwlist[] = { "", "hole_area", NULL };
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|f", const_cast<char **>(kwlist), &PyArray_Type, &image, &hole_area)) {
@@ -38,7 +38,7 @@ static PyObject *Py_FillHoles(PyObject *, PyObject *args, PyObject *kwargs)
 
 static PyObject *Py_RefineRegions(PyObject *, PyObject *args)
 {
-    PyArrayObject *image;
+    PyArrayObject *image = nullptr;
     if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &image)) {
         PyErr_SetString(PyExc_TypeError, "Invalid argumnets");
         return NULL;
@@ -49,11 +49,12 @@ static PyObject *Py_RefineRegions(PyObject *, PyObject *args)
 
 static PyObject *Py_RefineLegs(PyObject *, PyObject *args, PyObject *kwargs)
 {
-    PyArrayObject *image;
-    PyObject *pair_labels;
-    PyObject *body_labels;
-    const char *kwlist[] = { "", "pair_labels", "body_labels", NULL };
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!", const_cast<char **>(kwlist), &PyArray_Type, &image, &PyList_Type, &pair_labels, &PySet_Type, &body_labels)) {
+    PyArrayObject *image = nullptr;
+    PyObject *pair_labels = nullptr;
+    PyObject *body_labels = nullptr;
+    PyObject *alternative_labels = PySet_New(nullptr);
+    const char *kwlist[] = { "", "pair_labels", "body_labels", "alternative_labels", NULL };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!|O!", const_cast<char **>(kwlist), &PyArray_Type, &image, &PyList_Type, &pair_labels, &PySet_Type, &body_labels, &PySet_Type, &alternative_labels)) {
         PyErr_SetString(PyExc_TypeError, "Invalid argumnets");
         return NULL;
     }
@@ -70,30 +71,28 @@ static PyObject *Py_RefineLegs(PyObject *, PyObject *args, PyObject *kwargs)
 
     std::vector<std::vector<Point>> legs;
     std::vector<Point> body;
-    for (auto &component : connected_components(output)) {
+    for (const auto &component : connected_components(output)) {
         if (component.label == 4) {
-            for (auto &leg : split_leg(output, body_labels, component)) {
-                if (!leg.empty()) {
-                    legs.push_back(std::move(leg));
-                }
+            for (const auto &leg : split_leg(output, body_labels, alternative_labels, component)) {
+                legs.emplace_back(std::move(leg));
             }
-        } else if (PySet_Contains(body_labels, PyLong_FromLong(component.label))) {
+        } else if (PySet_Contains(body_labels, PyLong_FromLong(component.label)) || PySet_Contains(alternative_labels, PyLong_FromLong(component.label))) {
             body.insert(body.end(), component.nodes.begin(), component.nodes.end());
         }
     }
 
-    reored_legs(output, body_labels, pair_labels, legs, body);
-
+    reored_legs(output, body_labels, pair_labels, alternative_labels, legs, body);
     return Py_BuildValue("O", output);
 }
 
 static PyObject *Py_LegSegments(PyObject *, PyObject *args, PyObject *kwargs)
 {
-    PyArrayObject *image;
-    PyObject *labels_map;
-    PyObject *body_labels;
-    const char *kwlist[] = { "", "labels", "body_labels", NULL };
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!", const_cast<char **>(kwlist), &PyArray_Type, &image, &PyDict_Type, &labels_map, &PySet_Type, &body_labels)) {
+    PyArrayObject *image = nullptr;
+    PyObject *labels_map = nullptr;
+    PyObject *body_labels = nullptr;
+    PyObject *alternative_labels = PySet_New(nullptr);
+    const char *kwlist[] = { "", "labels", "body_labels", "alternative_labels", NULL };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!|O!", const_cast<char **>(kwlist), &PyArray_Type, &image, &PyDict_Type, &labels_map, &PySet_Type, &body_labels, &PySet_Type, &alternative_labels)) {
         PyErr_SetString(PyExc_TypeError, "Invalid argumnets");
         return NULL;
     }
@@ -108,10 +107,10 @@ static PyObject *Py_LegSegments(PyObject *, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    for (auto &component : connected_components(image)) {
+    for (const auto &component : connected_components(output)) {
         auto *labels = PyDict_GetItem(labels_map, PyLong_FromLong(component.label));
         if (labels != NULL) {
-            leg_segments(output, labels, body_labels, component);
+            leg_segments(output, labels, body_labels, alternative_labels, component);
         }
     }
 

@@ -23,7 +23,7 @@ PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
 
     const auto components = connected_components(mask, CONNECTIVITY_4);
 
-    const auto area = std::accumulate(components.begin(), components.end(), 0, [](auto acc, auto &component) {
+    const auto area = std::accumulate(components.begin(), components.end(), 0, [](const auto acc, const auto &component) {
         return acc + component.size();
     });
 

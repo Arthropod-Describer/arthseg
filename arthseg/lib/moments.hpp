@@ -9,12 +9,12 @@ class Moments
     double radius;
     Moments(const std::vector<Point> &points)
     {
-        auto centroid = get_centroid(points);
+        const auto centroid = get_centroid(points);
         long int central_moment_11 = 0;
         long int central_moment_20 = 0;
         long int central_moment_02 = 0;
 
-        for (auto &[row, col] : points) {
+        for (const auto &[row, col] : points) {
             central_moment_11 += (row - centroid.row) * (col - centroid.col);
             central_moment_20 += (row - centroid.row) * (row - centroid.row);
             central_moment_02 += (col - centroid.col) * (col - centroid.col);

@@ -14,7 +14,7 @@ struct Component
     Component(size_t label) : label(label) {}
     Component(size_t label, const std::vector<Point> &points) : label(label), nodes(points) {}
     bool empty() const { return nodes.empty(); }
-    auto size() const { return nodes.size(); }
+    size_t size() const { return nodes.size(); }
 };
 
 struct ComponentWithEdge : Component

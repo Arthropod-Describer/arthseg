@@ -3,105 +3,74 @@
 #include "skeletonization.hpp"
 #include "utils.hpp"
 
-std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, const Component &component)
+struct FloodComponent
 {
-    const std::vector<Point> start = find_leg_start(image, body_labels, component.nodes);
+    std::vector<Point> points;
+    size_t max_distance;
+    size_t min_distance;
+    FloodComponent(const Point &point, size_t distance) : points({ point }), max_distance(distance), min_distance(distance) {}
+    size_t length() const { return max_distance - min_distance; }
+};
 
-    const auto sorted = shortest_path(image, component.nodes, start);
+std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, PyObject *alternative_labels, const Component &component)
+{
+    const std::vector<Point> start = find_leg_start(image, body_labels, alternative_labels, component.nodes);
+
+    // leg not connected to body
+    if (start.empty()) {
+        return { component.nodes };
+    }
 
     Matrix<size_t> group_labels(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
     Matrix<bool> marker(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
-    std::vector<std::vector<Point>> groups;
+    std::vector<FloodComponent> groups;
 
+    const auto sorted = shortest_path(image, component.nodes, start);
     for (const auto &point : sorted) {
         marker.at(point) = true;
     }
 
+    const size_t min_length = (sorted.back().cost - sorted.front().cost) / 5;
     size_t label = 1;
     for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
         const auto &node = *it;
         if (group_labels.at(node) == 0) {
             group_labels.at(node) = label;
-            groups.push_back({ node });
+            groups.emplace_back(node, node.cost);
             label++;
         }
 
-        for (size_t i = 0; i < 8; i++) {
+        auto &group = groups[group_labels.at(node) - 1];
+        for (size_t i = 0; i < CONNECTIVITY_4; i++) {
             const auto row = node.row + drow[i];
             const auto col = node.col + dcol[i];
             if (is_outside(image, row, col) || !marker.at(row, col) || group_labels.at(row, col) == group_labels.at(node)) {
                 continue;
             }
 
-            const auto index = group_labels.at(row, col) - 1;
-
+            auto &other_group = groups[group_labels.at(row, col) - 1];
             if (group_labels.at(row, col) == 0) {
                 group_labels.at(row, col) = group_labels.at(node);
-                groups[group_labels.at(node) - 1].push_back({ row, col });
-            } else if (groups[index].size() < sorted.size() / 10 || groups[group_labels.at(node) - 1].size() < sorted.size() / 10) {
-                for (const auto &point : groups[index]) {
+                group.points.emplace_back(row, col);
+                group.max_distance = std::max(group.max_distance, node.cost);
+                group.min_distance = std::min(group.min_distance, node.cost);
+            } else if (group.length() < min_length || other_group.length() < min_length) {
+                for (const auto &point : other_group.points) {
                     group_labels.at(point) = group_labels.at(node);
-                    groups[group_labels.at(node) - 1].push_back(point);
+                    group.points.emplace_back(std::move(point));
                 }
-                groups[index].clear();
+                group.max_distance = std::max(group.max_distance, other_group.max_distance);
+                group.min_distance = std::min(group.min_distance, other_group.min_distance);
+                other_group.points.clear();
             }
         }
     }
 
-    return groups;
+    std::vector<std::vector<Point>> result;
+    for (const auto &group : groups) {
+        if (!group.points.empty()) {
+            result.emplace_back(std::move(group.points));
+        }
+    }
+    return result;
 }
-
-// std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, const Component &component)
-// {
-//     std::vector<Point> start = find_leg_start(image, body_labels, component.nodes);
-
-//     auto sorted = shortest_path(image, component.nodes, start);
-//     auto skeleton = skeletonization(image, component.nodes);
-
-//     Matrix<size_t> group_labels(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
-//     Matrix<bool> marker(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
-//     Matrix<bool> skeleton_mask(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
-
-//     for (auto &point : skeleton) {
-//         skeleton_mask.at(point) = true;
-//     }
-
-//     std::vector<std::vector<Point>> groups;
-
-//     size_t label = 1;
-//     for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
-//         auto &node = *it;
-//         if (!skeleton_mask.at(node)) {
-//             continue;
-//         }
-
-//         if (group_labels.at(node) == 0) {
-//             group_labels.at(node) = label;
-//             groups.push_back({ node });
-//             label++;
-//         }
-
-//         for (size_t i = 0; i < CONNECTIVITY_8; i++) {
-//             auto row = node.row + drow[i];
-//             auto col = node.col + dcol[i];
-//             if (is_outside(image, row, col) || !skeleton_mask.at(row, col) || group_labels.at(row, col) == group_labels.at(node)) {
-//                 continue;
-//             }
-
-//             auto index = group_labels.at(row, col) - 1;
-
-//             if (group_labels.at(row, col) == 0) {
-//                 group_labels.at(row, col) = group_labels.at(node);
-//                 groups[group_labels.at(node) - 1].emplace_back(row, col);
-//             } else if (groups[index].size() < skeleton.size() / 10 || groups[group_labels.at(node) - 1].size() < skeleton.size() / 10) {
-//                 for (auto &point : groups[index]) {
-//                     group_labels.at(point) = group_labels.at(node);
-//                     groups[group_labels.at(node) - 1].push_back(point);
-//                 }
-//                 groups[index].clear();
-//             }
-//         }
-//     }
-
-//     return groups;
-// }
