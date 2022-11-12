@@ -4,7 +4,7 @@
 #include "shortest_path.hpp"
 #include "utils.hpp"
 
-static constexpr size_t line = 10, diagonal = 14;
+static constexpr int line = 10, diagonal = 14;
 
 std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &points, const std::vector<Point> &start)
 {
@@ -35,8 +35,8 @@ std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &
         marker.at(node) = false;
         nodes.push_back(node);
         for (size_t i = 0; i < CONNECTIVITY_8; i++) {
-            const auto row = node.row + drow[i];
-            const auto col = node.col + dcol[i];
+            const size_t row = node.row + drow[i];
+            const size_t col = node.col + dcol[i];
             const auto cost = node.cost + (i < 4 ? line : diagonal);
 
             if (row < rows && col < cols && marker.at(row, col) && cost < distance.at(row, col)) {

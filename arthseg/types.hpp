@@ -10,12 +10,13 @@ using Connectivity = enum Connectivity {
 
 struct Point
 {
-    size_t row, col;
+    // because of windows bug
+    unsigned short row, col;
     Point(size_t row, size_t col) : row(row), col(col) {}
     static float distance(const Point &a, const Point &b)
     {
-        const float dx = abs((int) a.col - (int) b.col);
-        const float dy = abs((int) a.row - (int) b.row);
+        const auto dx = abs((int) a.col - (int) b.col);
+        const auto dy = abs((int) a.row - (int) b.row);
         return dx > dy ? (0.41 * dy + 0.941246 * dx) : (0.41 * dx + 0.941246 * dy);
     }
 };
