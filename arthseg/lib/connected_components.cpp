@@ -27,7 +27,7 @@ std::vector<Component> connected_components(PyArrayObject *image, Connectivity c
 static void dfs(PyArrayObject *image, Matrix<bool> &marker, Component &component, Connectivity connectivity)
 {
     for (size_t i = 0; i < component.size(); i++) {
-        const auto &point = component.nodes[i];
+        const auto point = component.nodes[i];
         for (size_t j = 0; j < connectivity; j++) {
             const auto row = point.row + drow[j];
             const auto col = point.col + dcol[j];

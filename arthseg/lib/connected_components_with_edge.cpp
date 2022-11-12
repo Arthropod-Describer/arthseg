@@ -29,7 +29,7 @@ std::vector<ComponentWithEdge> connected_components_with_edge(PyArrayObject *ima
 static void dfs(PyArrayObject *image, Matrix<bool> &marker, ComponentWithEdge &component, Connectivity connectivity, Connectivity edge_connectivity)
 {
     for (size_t i = 0; i < component.size(); i++) {
-        const auto &point = component.nodes[i];
+        const auto point = component.nodes[i];
         for (size_t j = 0; j < connectivity; j++) {
             const auto row = point.row + drow[j];
             const auto col = point.col + dcol[j];

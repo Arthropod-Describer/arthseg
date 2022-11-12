@@ -10,8 +10,7 @@ using Connectivity = enum Connectivity {
 
 struct Point
 {
-    // because of windows bug
-    unsigned short row, col;
+    size_t row, col;
     Point(size_t row, size_t col) : row(row), col(col) {}
     static float distance(const Point &a, const Point &b)
     {
