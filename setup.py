@@ -19,7 +19,7 @@ module = Extension(
 
 setup(
     name='arthseg',
-    version='0.0.7',
+    version='0.0.8',
     license='MIT',
     description='Native library for arthropod segmentation',
     long_description=Path("README.md").read_text(encoding="utf-8"),
