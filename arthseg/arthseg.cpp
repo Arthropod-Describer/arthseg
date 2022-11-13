@@ -34,20 +34,22 @@ static PyObject *Py_RemoveDirt(PyObject *, PyObject *args, PyObject *kwargs)
 static PyObject *Py_FillHoles(PyObject *, PyObject *args, PyObject *kwargs)
 {
     PyArrayObject *image = nullptr;
+    unsigned long fill_value;
     float hole_area = 0.001;
-    const char *kwlist[] = { "", "hole_area", NULL };
+    const char *kwlist[] = { "", "fill_value", "hole_area", NULL };
     if (!PyArg_ParseTupleAndKeywords(args,
                 kwargs,
-                "O!|f",
+                "O!k|f",
                 const_cast<char **>(kwlist),
                 &PyArray_Type,
                 &image,
+                &fill_value,
                 &hole_area)) {
         PyErr_SetString(PyExc_TypeError, "Invalid argumnets");
         return NULL;
     }
 
-    return Py_BuildValue("O", fill_holes(image, hole_area));
+    return Py_BuildValue("O", fill_holes(image, fill_value, hole_area));
 }
 
 static PyObject *Py_RefineRegions(PyObject *, PyObject *args, PyObject *kwargs)

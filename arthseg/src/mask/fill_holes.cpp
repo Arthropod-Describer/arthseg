@@ -4,7 +4,7 @@
 #include "fill_holes.hpp"
 #include "utils.hpp"
 
-PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
+PyArrayObject *fill_holes(PyArrayObject *image, unsigned long fill_value, float hole_area)
 {
     import_array();
     PyArrayObject *mask = (PyArrayObject *) PyArray_EMPTY(PyArray_NDIM(image), PyArray_DIMS(image), NPY_UINT8, 0);
@@ -37,7 +37,7 @@ PyArrayObject *fill_holes(PyArrayObject *image, float hole_area)
     for (const auto &component : components) {
         if (component.size() < max_area) {
             for (const auto &node : component.nodes) {
-                PyArray_Set(output, node.row, node.col, 1);
+                PyArray_Set(output, node.row, node.col, fill_value);
             }
         }
     }

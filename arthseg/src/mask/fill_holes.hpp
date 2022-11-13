@@ -3,4 +3,4 @@
 
 #include <numpy/ndarraytypes.h>
 
-PyArrayObject *fill_holes(PyArrayObject *image, float hole_area);
+PyArrayObject *fill_holes(PyArrayObject *image, unsigned long fill_value, float hole_area);
