@@ -7,14 +7,15 @@ class Moments
   public:
     double angle;
     double radius;
+
     Moments(const std::vector<Point> &points)
     {
-        auto centroid = get_centroid(points);
+        const auto centroid = get_centroid(points);
         long int central_moment_11 = 0;
         long int central_moment_20 = 0;
         long int central_moment_02 = 0;
 
-        for (auto &[row, col] : points) {
+        for (const auto &[row, col] : points) {
             central_moment_11 += (row - centroid.row) * (col - centroid.col);
             central_moment_20 += (row - centroid.row) * (row - centroid.row);
             central_moment_02 += (col - centroid.col) * (col - centroid.col);
@@ -43,7 +44,7 @@ class Moments
     int half_axis(const Point &point) const
     /**
      * @param point Point to calculate the half axis for
-     * @return negative half axis if point is on the left side of the centroid, positive half axis otherwise
+     * @return negative if point is on the left side of the centroid, positive otherwise
      */
     {
         return point.row * sin(angle) + point.col * cos(angle) - radius;

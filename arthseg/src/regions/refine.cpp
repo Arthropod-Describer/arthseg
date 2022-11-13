@@ -5,9 +5,11 @@
 #include "refine.hpp"
 #include "utils.hpp"
 
-static void attach(PyArrayObject *image, const ComponentWithEdge &component);
+static const void attach(PyArrayObject *image,
+        const ComponentWithEdge &component,
+        Matrix<ComponentWithEdge *> &marker);
 
-PyArrayObject *refine_regions(PyArrayObject *image)
+PyArrayObject *refine_regions(PyArrayObject *image, PyObject *body_labels, float min_area)
 {
     import_array();
     PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
@@ -20,53 +22,70 @@ PyArrayObject *refine_regions(PyArrayObject *image)
         return NULL;
     }
 
-    auto components = connected_components_with_edge(image);
+    auto components = connected_components_with_edge(image, CONNECTIVITY_4);
 
+    Matrix<ComponentWithEdge *> marker(PyArray_DIM(image, 0), PyArray_DIM(image, 1));
     std::map<size_t, const ComponentWithEdge *> max_components;
     size_t body_area = 0;
-    for (const auto &component : components) {
+    for (auto &component : components) {
         max_components.try_emplace(component.label, &component);
         if (max_components[component.label]->size() < component.size()) {
             max_components[component.label] = &component;
         }
-        if (component.label < 4) {
+        if (PySet_Contains(body_labels, PyLong_FromLong(component.label))) {
             body_area += component.size();
+        }
+
+        for (const auto &pixel : component.edge) {
+            marker.at(pixel) = &component;
         }
     }
 
     for (const auto &component : components) {
-        if (&component == max_components[component.label] || (component.label == 4 && component.size() > body_area / 40)) {
-            continue;
+        if (!component.empty() &&
+                &component != max_components[component.label] &&
+                (PySet_Contains(body_labels, PyLong_FromLong(component.label)) || component.size() < body_area * min_area)) {
+            attach(output, component, marker);
         }
-        attach(output, component);
     }
 
     return output;
 }
 
-static void attach(PyArrayObject *image, const ComponentWithEdge &component)
+static const void attach(PyArrayObject *image,
+        const ComponentWithEdge &component,
+        Matrix<ComponentWithEdge *> &marker)
 {
-    std::map<unsigned long, size_t> neighbours;
+    std::map<ComponentWithEdge *, size_t> neighbours;
 
-    for (auto &edge : component.edge) {
+    for (const auto &edge : component.edge) {
         for (size_t i = 0; i < CONNECTIVITY_4; i++) {
-            auto row = edge.row + drow[i];
-            auto col = edge.col + dcol[i];
+            const auto row = edge.row + drow[i];
+            const auto col = edge.col + dcol[i];
 
-            if (!is_outside(image, row, col) && PyArray_At(image, row, col) != 0 && PyArray_At(image, row, col) != component.label) {
-                auto label = PyArray_At(image, row, col);
-                neighbours.try_emplace(label, 0);
-                neighbours[label]++;
+            if (!is_outside(image, row, col) &&
+                    PyArray_At(image, row, col) != component.label &&
+                    marker.at(row, col) != nullptr) {
+                neighbours.try_emplace(marker.at(row, col), 0);
+                neighbours[marker.at(row, col)]++;
             }
         }
     }
 
-    if (neighbours.empty()) {
-        return;
+    if (neighbours.empty()) { return; }
+
+    const auto [max_neighbour, _] = *std::max_element(neighbours.begin(),
+            neighbours.end(),
+            [](const auto &l, const auto &r) { return l.second < r.second; });
+
+    for (const auto &node : component.nodes) {
+        PyArray_Set(image, node.row, node.col, max_neighbour->label);
     }
 
-    auto [label, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](auto &l, auto &r) { return l.second < r.second; });
-    for (auto &node : component.nodes) {
-        PyArray_Set(image, node.row, node.col, label);
+    for (const auto &edge : component.edge) {
+        marker.at(edge) = max_neighbour;
     }
+
+    max_neighbour->nodes.insert(max_neighbour->nodes.end(), component.nodes.begin(), component.nodes.end());
+    max_neighbour->edge.insert(max_neighbour->edge.end(), component.edge.begin(), component.edge.end());
 }

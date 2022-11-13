@@ -19,7 +19,7 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
 
     for (npy_intp row = 0; row < PyArray_DIM(image, 0); row++) {
         for (npy_intp col = 0; col < PyArray_DIM(image, 1); col++) {
-            auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));
+            const auto value = PyLong_AsUnsignedLong(PyArray_GETITEM(image, (char *) PyArray_GETPTR2(image, row, col)));
             PyArray_SETITEM(mask, (char *) PyArray_GETPTR2(mask, row, col), Py_BuildValue("B", value != 0));
         }
     }
@@ -29,12 +29,12 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
         return NULL;
     }
 
-    auto components = connected_components_with_edge(mask);
+    const auto components = connected_components_with_edge(mask, CONNECTIVITY_4);
     if (components.size() < 2) {
         return output;
     }
 
-    auto largest = std::max_element(components.begin(), components.end(), [](auto &left, auto &right) {
+    const auto largest = std::max_element(components.begin(), components.end(), [](const auto &left, const auto &right) {
         return left.size() < right.size();
     });
 
@@ -43,7 +43,7 @@ PyArrayObject *remove_dirt(PyArrayObject *image, bool keep, size_t max_distance,
             continue;
         }
         if (!keep || it->size() < min_area * largest->size() || min_distance(largest->edge, it->edge) > max_distance) {
-            for (auto &node : it->nodes) {
+            for (const auto &node : it->nodes) {
                 PyArray_Set(output, node.row, node.col, 0);
             }
         }
@@ -56,8 +56,8 @@ static size_t min_distance(const std::vector<Point> &left, const std::vector<Poi
 {
     size_t distance = std::numeric_limits<size_t>::max();
 
-    for (auto &point1 : left) {
-        for (auto &point2 : right) {
+    for (const auto &point1 : left) {
+        for (const auto &point2 : right) {
             distance = std::min(distance, (size_t) Point::distance(point1, point2));
         }
     }

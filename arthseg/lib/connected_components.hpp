@@ -8,24 +8,19 @@
 
 struct Component
 {
-    size_t label;
+    const size_t label;
     std::vector<Point> nodes;
 
-    Component(const int label) : label(label) {}
-    Component(const int label, const Point &point) : label(label), nodes({ point }) {}
+    Component(size_t label) : label(label) {}
+    Component(size_t label, const std::vector<Point> &points) : label(label), nodes(points) {}
     bool empty() const { return nodes.empty(); }
     size_t size() const { return nodes.size(); }
-    bool operator<(const Component &other) const
-    {
-        return label < other.label; // || (label == other.label && size() >= other.size());
-    }
 };
 
 struct ComponentWithEdge : Component
 {
     std::vector<Point> edge;
-    ComponentWithEdge(int label) : Component(label) {}
-    ComponentWithEdge(const int label, const Point &point) : Component(label, point) {}
+    using Component::Component;
 };
 
 std::vector<Component> connected_components(PyArrayObject *image, Connectivity connectivity = CONNECTIVITY_8);

@@ -4,7 +4,8 @@
 #include "shortest_path.hpp"
 #include "utils.hpp"
 
-static constexpr size_t line = 10, diagonal = 14;
+// approximate distance between two points
+static constexpr int line = 10, diagonal = 14;
 
 std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &points, const std::vector<Point> &start)
 {
@@ -13,19 +14,19 @@ std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &
     Matrix<bool> marker(rows, cols);
     Matrix<size_t> distance(rows, cols, std::numeric_limits<size_t>::max());
 
-    for (auto &point : points) {
+    for (const auto &point : points) {
         marker.at(point) = true;
     }
 
     std::vector<Node> nodes;
     std::priority_queue<Node> queue;
-    for (auto &point : start) {
+    for (const auto &point : start) {
         queue.emplace(point.row, point.col, 0);
         distance.at(point) = 0;
     }
 
     while (!queue.empty()) {
-        auto node = queue.top();
+        const auto node = queue.top();
         queue.pop();
 
         if (!marker.at(node)) {
@@ -35,9 +36,9 @@ std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &
         marker.at(node) = false;
         nodes.push_back(node);
         for (size_t i = 0; i < CONNECTIVITY_8; i++) {
-            auto row = node.row + drow[i];
-            auto col = node.col + dcol[i];
-            auto cost = node.cost + (i < 4 ? line : diagonal);
+            const size_t row = node.row + drow[i];
+            const size_t col = node.col + dcol[i];
+            const auto cost = node.cost + (i < 4 ? line : diagonal);
 
             if (row < rows && col < cols && marker.at(row, col) && cost < distance.at(row, col)) {
                 distance.at(row, col) = cost;
