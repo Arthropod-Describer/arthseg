@@ -5,9 +5,11 @@
 #include "refine.hpp"
 #include "utils.hpp"
 
-static const void attach(PyArrayObject *image, const ComponentWithEdge &component, Matrix<ComponentWithEdge *> &marker);
+static const void attach(PyArrayObject *image,
+        const ComponentWithEdge &component,
+        Matrix<ComponentWithEdge *> &marker);
 
-PyArrayObject *refine_regions(PyArrayObject *image)
+PyArrayObject *refine_regions(PyArrayObject *image, PyObject *body_labels, float min_area)
 {
     import_array();
     PyArrayObject *output = (PyArrayObject *) PyArray_Empty(PyArray_NDIM(image), PyArray_DIMS(image), PyArray_DTYPE(image), 0);
@@ -30,7 +32,7 @@ PyArrayObject *refine_regions(PyArrayObject *image)
         if (max_components[component.label]->size() < component.size()) {
             max_components[component.label] = &component;
         }
-        if (component.label < 4) {
+        if (PySet_Contains(body_labels, PyLong_FromLong(component.label))) {
             body_area += component.size();
         }
 
@@ -40,7 +42,9 @@ PyArrayObject *refine_regions(PyArrayObject *image)
     }
 
     for (const auto &component : components) {
-        if (!component.empty() && &component != max_components[component.label] && (component.label != 4 || component.size() < body_area * 0.01)) {
+        if (!component.empty() &&
+                &component != max_components[component.label] &&
+                (PySet_Contains(body_labels, PyLong_FromLong(component.label)) || component.size() < body_area * min_area)) {
             attach(output, component, marker);
         }
     }
@@ -48,7 +52,9 @@ PyArrayObject *refine_regions(PyArrayObject *image)
     return output;
 }
 
-static const void attach(PyArrayObject *image, const ComponentWithEdge &component, Matrix<ComponentWithEdge *> &marker)
+static const void attach(PyArrayObject *image,
+        const ComponentWithEdge &component,
+        Matrix<ComponentWithEdge *> &marker)
 {
     std::map<ComponentWithEdge *, size_t> neighbours;
 
@@ -57,18 +63,20 @@ static const void attach(PyArrayObject *image, const ComponentWithEdge &componen
             const auto row = edge.row + drow[i];
             const auto col = edge.col + dcol[i];
 
-            if (!is_outside(image, row, col) && PyArray_At(image, row, col) != component.label && marker.at(row, col) != nullptr) {
+            if (!is_outside(image, row, col) &&
+                    PyArray_At(image, row, col) != component.label &&
+                    marker.at(row, col) != nullptr) {
                 neighbours.try_emplace(marker.at(row, col), 0);
                 neighbours[marker.at(row, col)]++;
             }
         }
     }
 
-    if (neighbours.empty()) {
-        return;
-    }
+    if (neighbours.empty()) { return; }
 
-    const auto [max_neighbour, _] = *std::max_element(neighbours.begin(), neighbours.end(), [](const auto &l, const auto &r) { return l.second < r.second; });
+    const auto [max_neighbour, _] = *std::max_element(neighbours.begin(),
+            neighbours.end(),
+            [](const auto &l, const auto &r) { return l.second < r.second; });
 
     for (const auto &node : component.nodes) {
         PyArray_Set(image, node.row, node.col, max_neighbour->label);

@@ -4,6 +4,7 @@
 #include "shortest_path.hpp"
 #include "utils.hpp"
 
+// approximate distance between two points
 static constexpr int line = 10, diagonal = 14;
 
 std::vector<Node> shortest_path(PyArrayObject *image, const std::vector<Point> &points, const std::vector<Point> &start)

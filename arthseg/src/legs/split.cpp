@@ -1,6 +1,5 @@
 #include "legs.hpp"
 #include "shortest_path.hpp"
-#include "skeletonization.hpp"
 #include "utils.hpp"
 
 struct FloodComponent
@@ -10,6 +9,20 @@ struct FloodComponent
     size_t min_distance;
     FloodComponent(const Point &point, size_t distance) : points({ point }), max_distance(distance), min_distance(distance) {}
     size_t length() const { return max_distance - min_distance; }
+    void add(const Node &node)
+    {
+        points.push_back(node);
+        max_distance = std::max(max_distance, node.cost);
+        min_distance = std::min(min_distance, node.cost);
+    }
+    void add(const FloodComponent &component)
+    {
+        for (const Point &point : component.points) {
+            points.push_back(point);
+        }
+        max_distance = std::max(max_distance, component.max_distance);
+        min_distance = std::min(min_distance, component.min_distance);
+    }
 };
 
 std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_labels, PyObject *alternative_labels, const Component &component)
@@ -30,7 +43,9 @@ std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_l
         marker.at(point) = true;
     }
 
+    // minimal length of leg
     const size_t min_length = (sorted.back().cost - sorted.front().cost) / 5;
+
     size_t label = 1;
     for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
         const auto &node = *it;
@@ -51,13 +66,11 @@ std::vector<std::vector<Point>> split_leg(PyArrayObject *image, PyObject *body_l
             auto &other_group = groups[group_labels.at(row, col) - 1];
             if (group_labels.at(row, col) == 0) {
                 group_labels.at(row, col) = group_labels.at(node);
-                group.points.emplace_back(row, col);
-                group.max_distance = std::max(group.max_distance, node.cost);
-                group.min_distance = std::min(group.min_distance, node.cost);
+                group.add({ row, col, node.cost });
             } else if (group.length() < min_length || other_group.length() < min_length) {
-                for (const auto &point : other_group.points) {
+                for (const Point &point : other_group.points) {
                     group_labels.at(point) = group_labels.at(node);
-                    group.points.emplace_back(std::move(point));
+                    group.points.push_back(point);
                 }
                 group.max_distance = std::max(group.max_distance, other_group.max_distance);
                 group.min_distance = std::min(group.min_distance, other_group.min_distance);

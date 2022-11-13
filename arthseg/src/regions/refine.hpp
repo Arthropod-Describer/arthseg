@@ -3,4 +3,4 @@
 
 #include <numpy/ndarraytypes.h>
 
-PyArrayObject *refine_regions(PyArrayObject *image);
+PyArrayObject *refine_regions(PyArrayObject *image, PyObject *body_labels, float min_area);
