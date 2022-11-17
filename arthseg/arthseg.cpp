@@ -198,11 +198,9 @@ static PyObject *Py_LegSegments(PyObject *, PyObject *args, PyObject *kwargs)
 
     for (const auto &leg : legs) {
         auto *labels = PyDict_GetItem(labels_map, PyLong_FromLong(leg.label));
-        if (labels == NULL) {
-            PyErr_SetString(PyExc_RuntimeError, "Failed to get labels");
-            return NULL;
+        if (labels != NULL) {
+            leg_segments(output, labels, body_labels, alternative_labels, leg.nodes);
         }
-        leg_segments(output, labels, body_labels, alternative_labels, leg.nodes);
     }
 
     return Py_BuildValue("O", output);
