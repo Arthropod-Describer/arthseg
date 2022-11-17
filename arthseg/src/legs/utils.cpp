@@ -16,12 +16,12 @@ bool is_edge(PyArrayObject *image, PyObject *labels, const Point &point)
     return false;
 }
 
-std::vector<Point> find_leg_start(PyArrayObject *image, PyObject *body_labels, PyObject *alternative_labels, const std::vector<Point> &component)
+std::vector<Point> find_leg_start(PyArrayObject *image, PyObject *body_labels, PyObject *alternative_labels, const std::vector<Point> &points)
 {
     std::vector<Point> start;
-    std::copy_if(component.begin(), component.end(), std::back_inserter(start), [&](const Point &point) { return is_edge(image, body_labels, point); });
+    std::copy_if(points.begin(), points.end(), std::back_inserter(start), [&](const Point &point) { return is_edge(image, body_labels, point); });
     if (start.empty()) {
-        std::copy_if(component.begin(), component.end(), std::back_inserter(start), [&](const Point &point) { return is_edge(image, alternative_labels, point); });
+        std::copy_if(points.begin(), points.end(), std::back_inserter(start), [&](const Point &point) { return is_edge(image, alternative_labels, point); });
     }
     return start;
 }
