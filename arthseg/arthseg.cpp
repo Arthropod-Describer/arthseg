@@ -1,6 +1,7 @@
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 
 #include <Python.h>
+#include <map>
 #include <numpy/arrayobject.h>
 
 #include "src/legs/legs.hpp"
@@ -171,13 +172,37 @@ static PyObject *Py_LegSegments(PyObject *, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    for (const auto &component : connected_components(output)) {
-        auto *labels =
-                PyDict_GetItem(labels_map, PyLong_FromLong(component.label));
-        if (labels != NULL) {
-            leg_segments(
-                    output, labels, body_labels, alternative_labels, component);
+    std::map<long, long> trasposed_labels, label_remap;
+    auto *items = PyDict_Items(labels_map);
+    for (Py_ssize_t i = 0; i < PyList_Size(items); i++) {
+        auto *item = PyList_GetItem(items, i);
+        auto *key = PyTuple_GetItem(item, 0);
+        auto *value = PyTuple_GetItem(item, 1);
+        for (Py_ssize_t j = 0; j < PyList_Size(value); j++) {
+            auto *label = PyList_GetItem(value, j);
+            trasposed_labels[PyLong_AsLong(label)] = PyLong_AsLong(key);
         }
+        trasposed_labels[PyLong_AsLong(key)] = PyLong_AsLong(key);
+        label_remap[PyLong_AsLong(key)] = i;
+    }
+
+    std::vector<Component> legs(PyList_Size(PyDict_Items(labels_map)));
+    for (const auto &component : connected_components(output)) {
+        if (trasposed_labels.find(component.label) != trasposed_labels.end()) {
+            const auto label = trasposed_labels[component.label];
+            auto &leg = legs[label_remap[label]];
+            leg.nodes.insert(leg.nodes.end(), component.nodes.begin(), component.nodes.end());
+            leg.label = label;
+        }
+    }
+
+    for (const auto &leg : legs) {
+        auto *labels = PyDict_GetItem(labels_map, PyLong_FromLong(leg.label));
+        if (labels == NULL) {
+            PyErr_SetString(PyExc_RuntimeError, "Failed to get labels");
+            return NULL;
+        }
+        leg_segments(output, labels, body_labels, alternative_labels, leg.nodes);
     }
 
     return Py_BuildValue("O", output);

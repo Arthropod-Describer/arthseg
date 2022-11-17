@@ -8,9 +8,10 @@
 
 struct Component
 {
-    const size_t label;
+    size_t label;
     std::vector<Point> nodes;
 
+    Component() = default;
     Component(size_t label) : label(label) {}
     Component(size_t label, const std::vector<Point> &points) : label(label), nodes(points) {}
     bool empty() const { return nodes.empty(); }
